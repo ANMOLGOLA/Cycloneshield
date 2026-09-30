@@ -1,0 +1,6 @@
+{
+  "name": "CycloneShield",
+  "description": "Pre-landfall cyclone command center and early-action platform for the Bay of Bengal with storm surge simulation, cascading vulnerability trees, and CAP 1.2 alert dispatch.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

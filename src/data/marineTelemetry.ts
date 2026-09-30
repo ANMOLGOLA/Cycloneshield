@@ -1,0 +1,90 @@
+import { TelemetryStation } from '../types/cyclone';
+
+export const TELEMETRY_STATIONS: TelemetryStation[] = [
+  {
+    id: 'buoy-bd09',
+    name: 'NIOT Deep-Sea Buoy BD-09 (17.5°N 89.2°E)',
+    type: 'buoy',
+    lat: 17.5,
+    lon: 89.2,
+    pressureHpa: 948.2,
+    windSpeedKt: 98,
+    gustKt: 118,
+    waveHeightM: 8.6,
+    seaSurfaceTempC: 30.2,
+    waterLevelM: 0.85,
+    batteryPct: 98,
+    lastUpdated: '10 min ago (Satellite Inmarsat-C)',
+    status: 'ONLINE'
+  },
+  {
+    id: 'buoy-bd11',
+    name: 'INCOIS Coastal Moored Buoy BD-11 (19.2°N 85.9°E)',
+    type: 'buoy',
+    lat: 19.2,
+    lon: 85.9,
+    pressureHpa: 941.5,
+    windSpeedKt: 122,
+    gustKt: 140,
+    waveHeightM: 10.4,
+    seaSurfaceTempC: 30.6,
+    waterLevelM: 3.40,
+    batteryPct: 94,
+    lastUpdated: '4 min ago (Iridium SBD)',
+    status: 'ONLINE'
+  },
+  {
+    id: 'aws-puri',
+    name: 'IMD Automated Weather Station — Puri Coastal Observatory',
+    type: 'aws',
+    lat: 19.80,
+    lon: 85.82,
+    pressureHpa: 944.0,
+    windSpeedKt: 114,
+    gustKt: 132,
+    lastUpdated: '2 min ago (Cellular + HF Backup)',
+    batteryPct: 88,
+    status: 'ONLINE'
+  },
+  {
+    id: 'tide-gopalpur',
+    name: 'SOI Acoustic Tide Gauge — Gopalpur Port',
+    type: 'tide_gauge',
+    lat: 19.30,
+    lon: 84.97,
+    pressureHpa: 968.4,
+    windSpeedKt: 72,
+    gustKt: 85,
+    waterLevelM: 3.12,
+    lastUpdated: '6 min ago',
+    batteryPct: 92,
+    status: 'ONLINE'
+  },
+  {
+    id: 'tide-paradeep',
+    name: 'Survey of India Tide Gauge — Paradeep Harbor',
+    type: 'tide_gauge',
+    lat: 20.27,
+    lon: 86.70,
+    pressureHpa: 955.1,
+    windSpeedKt: 84,
+    gustKt: 98,
+    waterLevelM: 3.85,
+    lastUpdated: '1 min ago',
+    batteryPct: 96,
+    status: 'ONLINE'
+  },
+  {
+    id: 'radar-paradeep',
+    name: 'IMD S-Band Doppler Weather Radar (DWR) — Paradeep',
+    type: 'doppler_radar',
+    lat: 20.29,
+    lon: 86.71,
+    pressureHpa: 955.0,
+    windSpeedKt: 86,
+    gustKt: 102,
+    lastUpdated: '12 sec ago (Real-time volume scan)',
+    batteryPct: 100,
+    status: 'ONLINE'
+  }
+];

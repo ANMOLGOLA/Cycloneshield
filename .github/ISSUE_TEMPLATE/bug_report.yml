@@ -1,0 +1,28 @@
+name: Bug Report (Life-Safety Issue)
+description: Report a defect, numeric discrepancy, or vulnerability in CycloneShield.
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Life-Safety Standard**: Correctness and honesty outrank cleverness. If you observe a coordinate order bug, unit conversion error, or security issue, please provide exact reproduction telemetry.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What unexpected behavior or numerical discrepancy occurred?
+    validations:
+      required: true
+  - type: textarea
+    id: telemetry
+    attributes:
+      label: Meteorological / Telemetry Parameters
+      description: Cyclone name, lead time ($T-X\text{h}$), wind speed (kt), central pressure (hPa), tide gauge readings.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Physical / System Outcome
+      description: What was the expected physics output or system response?
+    validations:
+      required: true

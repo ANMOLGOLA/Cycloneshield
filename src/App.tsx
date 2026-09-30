@@ -22,13 +22,16 @@ import { ParametricInsuranceModal } from './components/ParametricInsuranceModal'
 import { SitrepModal } from './components/SitrepModal';
 import { TelemetryModal } from './components/TelemetryModal';
 import { RiskModelModal } from './components/RiskModelModal';
+import { AnticipatoryPlaybookModal } from './components/AnticipatoryPlaybookModal';
+import { ResiliencePlannerModal } from './components/ResiliencePlannerModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Seed Data
 import { HISTORICAL_CYCLONES } from './data/cyclones';
 import { INITIAL_DISTRICTS } from './data/districts';
 import { CRITICAL_ASSETS, CASCADING_FAILURES } from './data/assets';
 import { CycloneEvent, DistrictRisk } from './types/cyclone';
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, ShieldAlert } from 'lucide-react';
 
 export default function App() {
   // Navigation View: starts on clean, intuitive 'home' portal
@@ -67,8 +70,9 @@ export default function App() {
     showCascadingLinks: true,
   });
 
-  // UI Simplification: Ability to collapse left rail for clean focused map
+  // UI Simplification
   const [railCollapsed, setRailCollapsed] = useState(false);
+  const [isDrillMode, setIsDrillMode] = useState(false);
 
   // Advisory Approval State
   const [isAdvisoryApproved, setIsAdvisoryApproved] = useState(false);
@@ -82,6 +86,8 @@ export default function App() {
   const [isSitrepModalOpen, setIsSitrepModalOpen] = useState(false);
   const [isTelemetryModalOpen, setIsTelemetryModalOpen] = useState(false);
   const [isRiskModelModalOpen, setIsRiskModelModalOpen] = useState(false);
+  const [isPlaybookModalOpen, setIsPlaybookModalOpen] = useState(false);
+  const [isResilienceModalOpen, setIsResilienceModalOpen] = useState(false);
 
   // When cyclone changes, reset track index
   const handleSelectCyclone = useCallback((cyclone: CycloneEvent) => {
@@ -110,6 +116,8 @@ export default function App() {
         setIsSitrepModalOpen(false);
         setIsTelemetryModalOpen(false);
         setIsRiskModelModalOpen(false);
+        setIsPlaybookModalOpen(false);
+        setIsResilienceModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -129,7 +137,21 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#0b1220] text-[#dce2f6] h-screen flex flex-col overflow-hidden font-sans select-none">
+    <div className="bg-[#0b1220] text-[#dce2f6] h-screen flex flex-col overflow-hidden font-sans select-none relative">
+      {/* Drill Mode Watermark Banner */}
+      {isDrillMode && (
+        <div className="bg-amber-500 text-black px-4 py-1 text-center font-mono font-bold text-xs flex items-center justify-center gap-2 tracking-wider z-50 shadow-md">
+          <ShieldAlert className="w-4 h-4" />
+          EXERCISE / SIMULATION DRILL ACTIVE · ALL DISPATCHES ISOLATED FROM OPERATIONAL CHANNELS
+          <button
+            onClick={() => setIsDrillMode(false)}
+            className="underline ml-3 hover:text-white"
+          >
+            Exit Drill Mode
+          </button>
+        </div>
+      )}
+
       {/* 1. Top Navigation Bar */}
       <Header
         activeView={activeView}
@@ -150,7 +172,6 @@ export default function App() {
 
       {/* Main View Router */}
       {activeView === 'home' ? (
-        /* Streamlined Mission Portal Landing Page */
         <HomePage
           cyclone={selectedCyclone}
           cycloneList={cycloneList}
@@ -168,18 +189,14 @@ export default function App() {
           onSelectDistrict={(d) => setSelectedDistrict(d)}
         />
       ) : (
-        /* Tactical GIS Command Center View */
         <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Alert Banner Slot */}
           <AlertBanner
             onViewImpact={() => setIsRiskModelModalOpen(true)}
             onApproveAdvisory={() => setIsApprovalModalOpen(true)}
             isApproved={isAdvisoryApproved}
           />
 
-          {/* Tactical Workspace */}
           <div className="flex flex-1 relative overflow-hidden">
-            {/* Left Collapsible Layer Rail */}
             {!railCollapsed ? (
               <div className="relative flex">
                 <LayerRail
@@ -208,9 +225,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Central Tactical GIS Map View */}
             <div className="flex-1 relative flex flex-col bg-[#0c1321] overflow-hidden">
-              {/* Central Map Canvas */}
               <MapCanvas
                 cyclone={selectedCyclone}
                 currentTrackPoint={currentPt}
@@ -221,7 +236,6 @@ export default function App() {
                 layers={layers}
               />
 
-              {/* Top-Left Overlay: Storm Status Strip with Translational Speed metric */}
               <StormStatusStrip
                 cyclone={selectedCyclone}
                 currentTrackPoint={currentPt}
@@ -229,14 +243,12 @@ export default function App() {
                 onOpenHollandModel={() => setIsRiskModelModalOpen(true)}
               />
 
-              {/* Top-Right Overlay: Top-5 Priority Districts */}
               <PriorityDistrictsCard
                 districts={districts}
                 selectedDistrict={selectedDistrict}
                 onSelectDistrict={(d) => setSelectedDistrict(d)}
               />
 
-              {/* Bottom Timeline Scrubber */}
               <TimelineScrubber
                 trackPoints={selectedCyclone.track}
                 currentTrackIndex={currentTrackIndex}
@@ -245,7 +257,6 @@ export default function App() {
               />
             </div>
 
-            {/* Right Inspector Panel */}
             <InspectorPanel
               selectedDistrict={selectedDistrict}
               activeSectorMetrics={activeSectorMetrics}
@@ -254,7 +265,7 @@ export default function App() {
               onBroadcastEvacuation={() => setIsApprovalModalOpen(true)}
               onExportSitrep={() => setIsSitrepModalOpen(true)}
               onDispatchNdrf={() => {
-                alert('NDRF Task Force deployed across Puri and coastal staging zones.');
+                alert('NDRF Task Force deployed across coastal staging zones.');
               }}
               onOpenGeminiAI={() => setIsGeminiModalOpen(true)}
             />
@@ -262,57 +273,86 @@ export default function App() {
         </div>
       )}
 
-      {/* Persistent Modals (Accessible from both Home and Tactical views) */}
-      <GeminiReasoningModal
-        isOpen={isGeminiModalOpen}
-        onClose={() => setIsGeminiModalOpen(false)}
-        selectedDistrict={selectedDistrict}
-        cyclone={selectedCyclone}
-      />
+      {/* Persistent Modals with isolated ErrorBoundaries */}
+      <ErrorBoundary panelName="GeminiReasoningModal">
+        <GeminiReasoningModal
+          isOpen={isGeminiModalOpen}
+          onClose={() => setIsGeminiModalOpen(false)}
+          selectedDistrict={selectedDistrict}
+          cyclone={selectedCyclone}
+        />
+      </ErrorBoundary>
 
-      <AdvisoryApprovalModal
-        isOpen={isApprovalModalOpen}
-        onClose={() => setIsApprovalModalOpen(false)}
-        selectedDistrict={selectedDistrict}
-        cyclone={selectedCyclone}
-        isAlreadyApproved={isAdvisoryApproved}
-        onConfirmApproval={(hash) => {
-          setIsAdvisoryApproved(true);
-          setApprovedAuditHash(hash);
-        }}
-      />
+      <ErrorBoundary panelName="AdvisoryApprovalModal">
+        <AdvisoryApprovalModal
+          isOpen={isApprovalModalOpen}
+          onClose={() => setIsApprovalModalOpen(false)}
+          selectedDistrict={selectedDistrict}
+          cyclone={selectedCyclone}
+          isAlreadyApproved={isAdvisoryApproved}
+          onConfirmApproval={(hash) => {
+            setIsAdvisoryApproved(true);
+            setApprovedAuditHash(hash);
+          }}
+        />
+      </ErrorBoundary>
 
-      <ScenarioLabModal
-        isOpen={isScenarioLabOpen}
-        onClose={() => setIsScenarioLabOpen(false)}
-        cyclone={selectedCyclone}
-      />
+      <ErrorBoundary panelName="ScenarioLabModal">
+        <ScenarioLabModal
+          isOpen={isScenarioLabOpen}
+          onClose={() => setIsScenarioLabOpen(false)}
+          cyclone={selectedCyclone}
+        />
+      </ErrorBoundary>
 
-      <ParametricInsuranceModal
-        isOpen={isParametricModalOpen}
-        onClose={() => setIsParametricModalOpen(false)}
-        districts={districts}
-        cyclone={selectedCyclone}
-      />
+      <ErrorBoundary panelName="ParametricInsuranceModal">
+        <ParametricInsuranceModal
+          isOpen={isParametricModalOpen}
+          onClose={() => setIsParametricModalOpen(false)}
+          districts={districts}
+          cyclone={selectedCyclone}
+        />
+      </ErrorBoundary>
 
-      <SitrepModal
-        isOpen={isSitrepModalOpen}
-        onClose={() => setIsSitrepModalOpen(false)}
-        cyclone={selectedCyclone}
-        selectedDistrict={selectedDistrict}
-        districts={districts}
-        cascadingFailures={cascadingFailures}
-      />
+      <ErrorBoundary panelName="SitrepModal">
+        <SitrepModal
+          isOpen={isSitrepModalOpen}
+          onClose={() => setIsSitrepModalOpen(false)}
+          cyclone={selectedCyclone}
+          selectedDistrict={selectedDistrict}
+          districts={districts}
+          cascadingFailures={cascadingFailures}
+        />
+      </ErrorBoundary>
 
-      <TelemetryModal
-        isOpen={isTelemetryModalOpen}
-        onClose={() => setIsTelemetryModalOpen(false)}
-      />
+      <ErrorBoundary panelName="TelemetryModal">
+        <TelemetryModal
+          isOpen={isTelemetryModalOpen}
+          onClose={() => setIsTelemetryModalOpen(false)}
+        />
+      </ErrorBoundary>
 
-      <RiskModelModal
-        isOpen={isRiskModelModalOpen}
-        onClose={() => setIsRiskModelModalOpen(false)}
-      />
+      <ErrorBoundary panelName="RiskModelModal">
+        <RiskModelModal
+          isOpen={isRiskModelModalOpen}
+          onClose={() => setIsRiskModelModalOpen(false)}
+        />
+      </ErrorBoundary>
+
+      <ErrorBoundary panelName="AnticipatoryPlaybookModal">
+        <AnticipatoryPlaybookModal
+          isOpen={isPlaybookModalOpen}
+          onClose={() => setIsPlaybookModalOpen(false)}
+          selectedDistrict={selectedDistrict}
+        />
+      </ErrorBoundary>
+
+      <ErrorBoundary panelName="ResiliencePlannerModal">
+        <ResiliencePlannerModal
+          isOpen={isResilienceModalOpen}
+          onClose={() => setIsResilienceModalOpen(false)}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

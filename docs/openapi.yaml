@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: CycloneShield Emergency Decision-Support API
+  description: >
+    Operational Early Warning and Inundation Forecaster for the Bay of Bengal Basin.
+    Provides Holland (1980) wind profiles, GLO-30 DEM storm surge depths,
+    OASIS CAP 1.2 cryptographically signed advisories, and parametric insurance settlements.
+  version: 2.0.0
+  contact:
+    name: CycloneShield Operations Lead
+    email: ops-center@ndma.gov.in
+
+servers:
+  - url: http://localhost:3000
+    description: Local Operational Node
+  - url: https://api.cycloneshield.gov.in
+    description: Production National High-Availability Cluster
+
+paths:
+  /api/health:
+    get:
+      summary: System Health & Audit Chain Status
+      operationId: getHealth
+      responses:
+        '200':
+          description: Operational health status and audit chain integrity.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: HEALTHY
+                  uptimeSeconds:
+                    type: integer
+                  auditChain:
+                    type: object
+                    properties:
+                      totalRecords:
+                        type: integer
+                      integrityValid:
+                        type: boolean
+
+  /api/gemini/chat:
+    post:
+      summary: AI Decision-Support Q&A with Numerical Grounding Check
+      operationId: postGeminiChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  maxLength: 2000
+                context:
+                  type: object
+      responses:
+        '200':
+          description: Grounded reasoning response with verified citations.
+
+  /api/dispatch/send:
+    post:
+      summary: Cryptographically Signed CAP 1.2 Alert Broadcast
+      operationId: sendCapDispatch
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alertId]
+              properties:
+                alertId:
+                  type: string
+                channels:
+                  type: array
+                  items:
+                    type: string
+                dutyOfficer:
+                  type: string
+                authorizingOfficer:
+                  type: string
+      responses:
+        '200':
+          description: Signed broadcast record appended to cryptographic audit log.
+        '403':
+          description: Four-Eyes authorization or jurisdictional check rejected.
+
+  /api/cap/feed.xml:
+    get:
+      summary: Signed CAP 1.2 XML Feed Subscription
+      operationId: getCapFeed
+      responses:
+        '200':
+          description: Standard OASIS CAP 1.2 XML with W3C XML-DSig signature.
+          content:
+            application/xml:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

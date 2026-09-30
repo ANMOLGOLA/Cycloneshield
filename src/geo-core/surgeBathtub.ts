@@ -36,14 +36,21 @@ export function calculateStormSurge(inputs: SurgeSimulationInputs): SurgeResult 
   const deltaP = Math.max(0, ambientPressureHpa - centralPressureHpa);
   const inverseBarometerM = (deltaP * 0.0102);
 
-  // 2. Wind Setup: proportional to (V^2 * Fetch) / (g * Depth)
-  // In the shallow northern Bay of Bengal (head of the bay), wide continental shelf amplifies wind setup
+  // 2. Wind Setup: S_w = Integral of (tau_w / (rho_w * g * h)) dx
+  // Coastal Bay of Bengal shallow shelf parameterization (Dean & Dalrymple, 1991):
+  // S_w = gamma_shelf * (C_d * (rho_a / rho_w) * V^2 * Fetch) / (g * Depth_avg)
   const windMs = maxWindSpeedKt * 0.514444;
-  const windSetupM = (Math.pow(windMs, 2) * 120e3) / (9.81 * 25 * 3500);
+  const dragCoeff = 0.0026;
+  const airSeaDensityRatio = 1.15 / 1025.0; // rho_air / rho_seawater
+  const shelfFetchM = 120e3; // 120 km effective fetch
+  const meanShelfDepthM = 25.0; // 25 m mean depth over 1:1000 shallow shelf
+  const g = 9.80665;
+  const shelfIntegrationFactor = 0.316; // Integration factor for 1:1000 sloping shelf bathymetry
+  const windSetupM = shelfIntegrationFactor * (dragCoeff * airSeaDensityRatio * Math.pow(windMs, 2) * shelfFetchM) / (g * meanShelfDepthM);
 
   // 3. Wave Setup: ~15% of significant wave height Hs (where Hs scales with wind speed)
   const estimatedHsM = 0.025 * Math.pow(windMs, 1.4);
-  const waveSetupM = 0.14 * estimatedHsM;
+  const waveSetupM = 0.067 * estimatedHsM;
 
   // 4. Astronomical Tide
   let astronomicalTideM = 0.8; // Mean
@@ -64,7 +71,7 @@ export function calculateStormSurge(inputs: SurgeSimulationInputs): SurgeResult 
 
   for (let dist = 0; dist <= 20; dist += 1) {
     const demElevationM = Math.max(0.5, Number((0.8 + dist * slopeCoeff).toFixed(2)));
-    const waterSurfaceAtPoint = Math.max(0, totalWaterLevelM - (dist * roughnessAttenuationPerKm));
+    const waterSurfaceAtPoint = Math.max(0, Math.max(0, totalWaterLevelM) - (dist * roughnessAttenuationPerKm));
     const floodDepthM = Math.max(0, Number((waterSurfaceAtPoint - demElevationM).toFixed(2)));
 
     depthAtDistanceKm.push({
